@@ -1,43 +1,25 @@
 /*
 * perlin.c: Improved Perlin Noise Lua Module
-* Copyright (c) 2009, lua-perlin authors
+* Copyright (c) 2009, lua-noise authors
 * See copyright information in the COPYRIGHT file
-*
-* Original Improved Perlin Noise Implementation is copyright Ken Perlin:
+*/
+
+/*
+* Improved Perlin noise generation algorithm
+* Copyright (c) 2002 Ken Perlin
 * http://mrl.nyu.edu/~perlin/noise/
 */
 
-/* TODO: Allow different permutations! */
-/* TODO: Add octave sum noise */
-
 #include <math.h>
+#include <stdlib.h> /* For rand() */
 
 #include "luaheaders.h"
 
 #define LUAPERLIN_VERSION "0.1"
+#define LUAPERLIN_MT      "luaperlin-mt"
 
-#define PERMUTATION \
-  151,160,137,91,90,15, \
-  131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23, \
-  190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33, \
-  88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166, \
-  77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244, \
-  102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196, \
-  135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123, \
-  5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42, \
-  223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9, \
-  129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228, \
-  251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107, \
-  49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254, \
-  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
-
-static int p[512] =
-{
-  PERMUTATION,
-  PERMUTATION
-};
-
-#undef PERMUTATION
+#define NUM_PERMUTATIONS  (512)
+#define HALF_PERMUTATIONS (256)
 
 static double fade(double t)
 {
@@ -51,103 +33,163 @@ static double lerp(double t, double a, double b)
 
 static double grad(int hash, double x, double y, double z)
 {
-  int h = hash & 15;                      // CONVERT LO 4 BITS OF HASH CODE
-  double u = h<8 ? x : y,                 // INTO 12 GRADIENT DIRECTIONS.
+  int h = hash & 15;                      /* CONVERT LO 4 BITS OF HASH CODE */
+  double u = h<8 ? x : y,                 /* INTO 12 GRADIENT DIRECTIONS.   */
          v = h<4 ? y : h==12||h==14 ? x : z;
   return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
 
-static double noise3(double x, double y, double z)
+static double noise3(int * p, double x, double y, double z)
 {
-  int X = (int)floor(x) & 255,                       // FIND UNIT CUBE THAT
-      Y = (int)floor(y) & 255,                       // CONTAINS POINT.
+  int X = (int)floor(x) & 255,                       /* FIND UNIT CUBE THAT */
+      Y = (int)floor(y) & 255,                       /* CONTAINS POINT.     */
       Z = (int)floor(z) & 255;
 
-  x -= floor(x);                                     // FIND RELATIVE X,Y,Z
-  y -= floor(y);                                     // OF POINT IN CUBE.
+  double u, v, w;
+
+  int A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z,      /* HASH COORDINATES OF */
+      B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;      /* THE 8 CUBE CORNERS, */
+
+  x -= floor(x);                                     /* FIND RELATIVE X,Y,Z */
+  y -= floor(y);                                     /* OF POINT IN CUBE.   */
   z -= floor(z);
 
-  double u = fade(x),                                // COMPUTE FADE CURVES
-         v = fade(y),                                // FOR EACH OF X,Y,Z.
-         w = fade(z);
+  u = fade(x);                                       /* COMPUTE FADE CURVES */
+  v = fade(y);                                       /* FOR EACH OF X,Y,Z.  */
+  w = fade(z);
 
-  int A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z,      // HASH COORDINATES OF
-      B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;      // THE 8 CUBE CORNERS,
-
-  return lerp(w, lerp(v, lerp(u, grad(p[AA  ], x  , y  , z   ),  // AND ADD
-                                 grad(p[BA  ], x-1, y  , z   )), // BLENDED
-                         lerp(u, grad(p[AB  ], x  , y-1, z   ),  // RESULTS
-                                 grad(p[BB  ], x-1, y-1, z   ))),// FROM  8
-                 lerp(v, lerp(u, grad(p[AA+1], x  , y  , z-1 ),  // CORNERS
-                                 grad(p[BA+1], x-1, y  , z-1 )), // OF CUBE
+  return lerp(w, lerp(v, lerp(u, grad(p[AA  ], x  , y  , z   ),  /* AND ADD */
+                                 grad(p[BA  ], x-1, y  , z   )), /* BLENDED */
+                         lerp(u, grad(p[AB  ], x  , y-1, z   ),  /* RESULTS */
+                                 grad(p[BB  ], x-1, y-1, z   ))),/* FROM  8 */
+                 lerp(v, lerp(u, grad(p[AA+1], x  , y  , z-1 ),  /* CORNERS */
+                                 grad(p[BA+1], x-1, y  , z-1 )), /* OF CUBE */
                          lerp(u, grad(p[AB+1], x  , y-1, z-1 ),
                                  grad(p[BB+1], x-1, y-1, z-1 ))));
 }
 
-// Based on Perlin Noise Math FAQ by M. Zucker
-static int tiled_noise2(double x, double y, double w, double h)
+/*
+* Based on Perlin Noise Math FAQ by M. Zucker
+*/
+static int tiled_noise2(int * p, double x, double y, double w, double h)
 {
   return
     (
-      noise3(    x,     y, 0.0) * (w - x) * (h - y) +
-      noise3(x - w,     y, 0.0) * (x)     * (h - y) +
-      noise3(x - w, y - h, 0.0) * (x)     * (y) +
-      noise3(    x, y - h, 0.0) * (w - x) * (y)
+      noise3(p,     x,     y, 0.0) * (w - x) * (h - y) +
+      noise3(p, x - w,     y, 0.0) * (x)     * (h - y) +
+      noise3(p, x - w, y - h, 0.0) * (x)     * (y) +
+      noise3(p,     x, y - h, 0.0) * (w - x) * (y)
     ) / (w * h);
+}
+
+/* Assumes permutations array is of least NUM_PERMUTATION elements size */
+static void init_permutations(int * p)
+{
+  int i = 0;
+  int j = 0;
+  int k = 0;
+
+  /* Fill permutations array */
+  for (i = 0; i < HALF_PERMUTATIONS; ++i)
+  {
+    p[i] = i;
+  }
+
+  /* Shuffle permutations array */
+  for (i = 0; i < HALF_PERMUTATIONS; ++i)
+  {
+    k = p[i];
+    j = rand() % HALF_PERMUTATIONS;
+    p[i] = p[j];
+    p[j] = k;
+  }
+
+  /* Duplicate permutations array */
+  for (i = 0; i < HALF_PERMUTATIONS; ++i)
+  {
+    p[HALF_PERMUTATIONS + i] = p[i];
+  }
 }
 
 static int l_noise1(lua_State * L)
 {
-  double x = luaL_checknumber(L, 1);
+  int * p = (int *)luaL_checkudata(L, 1, LUAPERLIN_MT);
+  double x = luaL_checknumber(L, 2);
   double y = 0.0;
   double z = 0.0;
 
-  lua_pushnumber(L, noise3(x, y, z));
+  lua_pushnumber(L, noise3(p, x, y, z));
 
   return 1;
 }
 
 static int l_noise2(lua_State * L)
 {
-  double x = luaL_checknumber(L, 1);
-  double y = luaL_checknumber(L, 2);
+  int * p = (int *)luaL_checkudata(L, 1, LUAPERLIN_MT);
+  double x = luaL_checknumber(L, 2);
+  double y = luaL_checknumber(L, 3);
   double z = 0.0;
 
-  lua_pushnumber(L, noise3(x, y, z));
+  lua_pushnumber(L, noise3(p, x, y, z));
 
   return 1;
 }
 
 static int l_noise3(lua_State * L)
 {
-  double x = luaL_checknumber(L, 1);
-  double y = luaL_checknumber(L, 2);
-  double z = luaL_checknumber(L, 3);
+  int * p = (int *)luaL_checkudata(L, 1, LUAPERLIN_MT);
+  double x = luaL_checknumber(L, 2);
+  double y = luaL_checknumber(L, 3);
+  double z = luaL_checknumber(L, 4);
 
-  lua_pushnumber(L, noise3(x, y, z));
+  lua_pushnumber(L, noise3(p, x, y, z));
 
   return 1;
 }
 
 static int l_tiled_noise2(lua_State * L)
 {
-  double x = luaL_checknumber(L, 1);
-  double y = luaL_checknumber(L, 2);
-  double w = luaL_checknumber(L, 3);
-  double h = luaL_checknumber(L, 4);
+  int * p = (int *)luaL_checkudata(L, 1, LUAPERLIN_MT);
+  double x = luaL_checknumber(L, 2);
+  double y = luaL_checknumber(L, 3);
+  double w = luaL_checknumber(L, 4);
+  double h = luaL_checknumber(L, 5);
 
-  lua_pushnumber(L, tiled_noise2(x, y, w, h));
+  lua_pushnumber(L, tiled_noise2(p, x, y, w, h));
 
   return 1;
 }
 
-/* lua-perlin Lua module API */
-static const struct luaL_reg R[] =
+static int l_new(lua_State * L)
+{
+  int * permutations = (int *)lua_newuserdata(
+      L,
+      NUM_PERMUTATIONS * sizeof(int)
+    );
+
+  init_permutations(permutations);
+
+  /* Finish userdata initialization */
+  luaL_getmetatable(L, LUAPERLIN_MT);
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+/* Methods */
+static const struct luaL_reg M[] =
 {
 	{ "noise1", l_noise1 },
 	{ "noise2", l_noise2 },
 	{ "noise3", l_noise3 },
 	{ "tiled_noise2", l_tiled_noise2 },
+	{ NULL, NULL }
+};
+
+/* Lua module API */
+static const struct luaL_reg R[] =
+{
+	{ "new", l_new },
 	{ NULL, NULL }
 };
 
@@ -157,6 +199,17 @@ extern "C" {
 
 LUALIB_API int luaopen_perlin(lua_State * L)
 {
+  luaL_newmetatable(L, LUAPERLIN_MT);
+
+  lua_newtable(L);
+  luaL_register(L, NULL, M);
+  lua_setfield(L, -2, "__index"); /* mt.__index = M */
+
+  lua_pushliteral(L, LUAPERLIN_MT);
+  lua_setfield(L, -2, "__metatable"); /* mt.__metatable = LUAPERLIN_MT */
+
+  lua_pop(L, 1); /* Done with metatable. */
+
   luaL_register(L, "perlin", R);
   lua_pushliteral(L, LUAPERLIN_VERSION);
   lua_setfield(L, -2, "VERSION");

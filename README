@@ -1,7 +1,9 @@
-Lua-Perlin -- Perlin noise module for Lua
-=========================================
+Lua-Noise -- Noise module for Lua
+=================================
 
 This library is still in its embryonic phase.
 An appropriate description would be added later.
+
+See `TODO` file if you want to help.
 
 See the copyright information in the file named `COPYRIGHT`.

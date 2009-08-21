@@ -1,10 +1,20 @@
-Lua-Perlin authors
-------------------
+Acknowledgements
+----------------
 
-Implementation is based on Ken Perlin's own Java reference code:
+Perlin Noise Implementation is based on Ken Perlin's own Java reference code:
 
-http://mrl.nyu.edu/~perlin/noise/
+    http://mrl.nyu.edu/~perlin/noise/
 
-This specific Lua C module was coded by:
+Tiled Perlin noise is based on Perlin Noise Math FAQ by M. Zucker
+(note long url):
 
-"Alexander Gladysh" <agladysh@gmail.com>
+    http://web.archive.org/web/20070708001151/\
+      http://www.cs.cmu.edu/~mzucker/code/perlin-noise-math-faq.html
+
+
+Lua-Noise authors
+-----------------
+
+This Lua C module was coded by:
+
+Alexander Gladysh <agladysh@gmail.com>

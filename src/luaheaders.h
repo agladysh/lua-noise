@@ -1,14 +1,14 @@
-#ifndef LUAPERLIN_LUAHEADERS_H_
-#define LUAPERLIN_LUAHEADERS_H_
+#ifndef LUANOISE_LUAHEADERS_H_
+#define LUANOISE_LUAHEADERS_H_
 
-#if defined (__cplusplus) && !defined (LUAPERLIN_LUABUILTASCPP)
+#if defined (__cplusplus) && !defined (LUANOISE_LUABUILTASCPP)
 extern "C" {
 #endif
 
 #include <lua.h>
 #include <lauxlib.h>
-#if defined (__cplusplus) && !defined (LUAPERLIN_LUABUILTASCPP)
+#if defined (__cplusplus) && !defined (LUANOISE_LUABUILTASCPP)
 }
 #endif
 
-#endif /* LUAPERLIN_LUAHEADERS_H_ */
+#endif /* LUANOISE_LUAHEADERS_H_ */
