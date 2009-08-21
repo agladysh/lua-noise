@@ -6,4 +6,5 @@
 .DS_Store
 .project
 .settings
-perlin.so
+
+*.so
