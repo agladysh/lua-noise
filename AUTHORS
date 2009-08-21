@@ -1,0 +1,10 @@
+Lua-Perlin authors
+------------------
+
+Implementation is based on Ken Perlin's own Java reference code:
+
+http://mrl.nyu.edu/~perlin/noise/
+
+This specific Lua C module was coded by:
+
+"Alexander Gladysh" <agladysh@gmail.com>
