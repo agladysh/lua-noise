@@ -1,6 +1,13 @@
 TODO:
 
--- Write Makefile
--- Add simplex noise
+-- Do not use C rand(), allow user to supply data (or generator) somehow
+   Perhaps allow separate new_rand(), new_callback() and new_data(data) constructors.
+-- Add perlin:turbulence()
+-- Add perlin:fractalsum()
+-- Add old (before-improved) Perlin noise as a separate algorithm
+-- Allow optional init with Perlin's original permutation data (new_perlin())
+-- Add simplex Perlin noise (as a separate algorithm)
 -- Add Worley noise
+-- Write Makefile
 -- Write some tests
+-- Write readme
