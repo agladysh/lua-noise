@@ -1,3 +1,9 @@
+/*
+* luaheaders.h: C++-safe Lua headers inclusion
+* Copyright (c) 2009, lua-noise authors
+* See copyright information in the COPYRIGHT file
+*/
+
 #ifndef LUANOISE_LUAHEADERS_H_
 #define LUANOISE_LUAHEADERS_H_
 
