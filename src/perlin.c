@@ -11,7 +11,9 @@
 */
 
 #include <math.h>
+
 #include <stdlib.h> /* For rand() */
+#define RAND rand
 
 #include "luaheaders.h"
 
@@ -21,52 +23,71 @@
 #define NUM_PERMUTATIONS  (512)
 #define HALF_PERMUTATIONS (256)
 
-static double fade(double t)
-{
-  return t * t * t * (t * (t * 6 - 15) + 10);
-}
+#define FASTFLOOR(x) (((x)>0) ? ((int)(x)) : (((int)(x)) - 1))
 
-static double lerp(double t, double a, double b)
-{
-  return a + t * (b - a);
-}
+#define FADE(t) ((t) * (t) * (t) * ((t) * ((t) * 6 - 15) + 10))
 
-static double grad(int hash, double x, double y, double z)
-{
-  int h = hash & 15;                      /* CONVERT LO 4 BITS OF HASH CODE */
-  double u = h<8 ? x : y,                 /* INTO 12 GRADIENT DIRECTIONS.   */
-         v = h<4 ? y : h==12||h==14 ? x : z;
-  return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
-}
+#define LERP(t, a, b) ((a) + (t) * ((b) - (a)))
+
+#define GRADH(hash) ((int)((hash) & 15))
+
+#define GRADU(h, x, y) \
+  ((double)((h) < 8 ? (x) : (y)))
+
+#define GRADV(h, y, z) \
+  ((double)((h) < 4 ? (y) : (h) == 12 || (h) == 14 ? (x) : (z)))
+
+/* CONVERT LO 4 BITS OF HASH CODE */
+/* INTO 12 GRADIENT DIRECTIONS.   */
+#define GRAD(hash, x, y, z) \
+  ( \
+    ( \
+      (GRADH(hash) & 1) == 0 \
+        ? GRADU(GRADH(hash), (x), (y)) \
+        : -GRADU(GRADH(hash), (x), (y)) \
+    ) + \
+    ( \
+      (GRADH(hash) & 2) == 0 \
+        ? GRADV(GRADH(hash), (y), (z)) \
+        : -GRADV(GRADH(hash), (y), (z)) \
+    ) \
+  )
 
 static double noise3(int * p, double x, double y, double z)
 {
-  int X = (int)floor(x) & 255,                       /* FIND UNIT CUBE THAT */
-      Y = (int)floor(y) & 255,                       /* CONTAINS POINT.     */
-      Z = (int)floor(z) & 255;
+  int X = (int)FASTFLOOR(x) & 255,                   /* FIND UNIT CUBE THAT */
+      Y = (int)FASTFLOOR(y) & 255,                   /* CONTAINS POINT.     */
+      Z = (int)FASTFLOOR(z) & 255;
 
   double u, v, w;
 
   int A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z,      /* HASH COORDINATES OF */
       B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;      /* THE 8 CUBE CORNERS, */
 
-  x -= floor(x);                                     /* FIND RELATIVE X,Y,Z */
-  y -= floor(y);                                     /* OF POINT IN CUBE.   */
-  z -= floor(z);
+  x -= FASTFLOOR(x);                                  /* FIND RELATIVE X,Y,Z */
+  y -= FASTFLOOR(y);                                  /* OF POINT IN CUBE.   */
+  z -= FASTFLOOR(z);
 
-  u = fade(x);                                       /* COMPUTE FADE CURVES */
-  v = fade(y);                                       /* FOR EACH OF X,Y,Z.  */
-  w = fade(z);
+  u = FADE(x);                                       /* COMPUTE FADE CURVES */
+  v = FADE(y);                                       /* FOR EACH OF X,Y,Z.  */
+  w = FADE(z);
 
-  return lerp(w, lerp(v, lerp(u, grad(p[AA  ], x  , y  , z   ),  /* AND ADD */
-                                 grad(p[BA  ], x-1, y  , z   )), /* BLENDED */
-                         lerp(u, grad(p[AB  ], x  , y-1, z   ),  /* RESULTS */
-                                 grad(p[BB  ], x-1, y-1, z   ))),/* FROM  8 */
-                 lerp(v, lerp(u, grad(p[AA+1], x  , y  , z-1 ),  /* CORNERS */
-                                 grad(p[BA+1], x-1, y  , z-1 )), /* OF CUBE */
-                         lerp(u, grad(p[AB+1], x  , y-1, z-1 ),
-                                 grad(p[BB+1], x-1, y-1, z-1 ))));
+  return LERP(w, LERP(v, LERP(u, GRAD(p[AA  ], x  , y  , z   ),  /* AND ADD */
+                                 GRAD(p[BA  ], x-1, y  , z   )), /* BLENDED */
+                         LERP(u, GRAD(p[AB  ], x  , y-1, z   ),  /* RESULTS */
+                                 GRAD(p[BB  ], x-1, y-1, z   ))),/* FROM  8 */
+                 LERP(v, LERP(u, GRAD(p[AA+1], x  , y  , z-1 ),  /* CORNERS */
+                                 GRAD(p[BA+1], x-1, y  , z-1 )), /* OF CUBE */
+                         LERP(u, GRAD(p[AB+1], x  , y-1, z-1 ),
+                                 GRAD(p[BB+1], x-1, y-1, z-1 ))));
 }
+
+#undef FADE
+#undef LERP
+#undef GRAD
+#undef GRADU
+#undef GRADV
+#undef GRADH
 
 /*
 * Based on Perlin Noise Math FAQ by M. Zucker
@@ -99,7 +120,7 @@ static void init_permutations(int * p)
   for (i = 0; i < HALF_PERMUTATIONS; ++i)
   {
     k = p[i];
-    j = rand() % HALF_PERMUTATIONS;
+    j = RAND() % HALF_PERMUTATIONS;
     p[i] = p[j];
     p[j] = k;
   }
