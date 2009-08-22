@@ -10,8 +10,6 @@
 * http://mrl.nyu.edu/~perlin/noise/
 */
 
-#include <math.h>
-
 #include <stdlib.h> /* For rand() */
 #define RAND rand
 
@@ -92,7 +90,7 @@ static double noise3(int * p, double x, double y, double z)
 /*
 * Based on Perlin Noise Math FAQ by M. Zucker
 */
-static int tiled_noise2(int * p, double x, double y, double w, double h)
+static double tiled_noise2(int * p, double x, double y, double w, double h)
 {
   return
     (
