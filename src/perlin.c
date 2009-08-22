@@ -23,7 +23,7 @@
 
 #define FASTFLOOR(x) (((x)>0) ? ((int)(x)) : (((int)(x)) - 1))
 
-#define FADE(t) ((t) * (t) * (t) * ((t) * ((t) * 6 - 15) + 10))
+#define FADE(t) ((t) * (t) * (t) * ((t) * ((t) * 6.0f - 15.0f) + 10.0f))
 
 #define LERP(t, a, b) ((a) + (t) * ((b) - (a)))
 
@@ -70,14 +70,14 @@ static double noise3(int * p, double x, double y, double z)
   v = FADE(y);                                       /* FOR EACH OF X,Y,Z.  */
   w = FADE(z);
 
-  return LERP(w, LERP(v, LERP(u, GRAD(p[AA  ], x  , y  , z   ),  /* AND ADD */
-                                 GRAD(p[BA  ], x-1, y  , z   )), /* BLENDED */
-                         LERP(u, GRAD(p[AB  ], x  , y-1, z   ),  /* RESULTS */
-                                 GRAD(p[BB  ], x-1, y-1, z   ))),/* FROM  8 */
-                 LERP(v, LERP(u, GRAD(p[AA+1], x  , y  , z-1 ),  /* CORNERS */
-                                 GRAD(p[BA+1], x-1, y  , z-1 )), /* OF CUBE */
-                         LERP(u, GRAD(p[AB+1], x  , y-1, z-1 ),
-                                 GRAD(p[BB+1], x-1, y-1, z-1 ))));
+  return LERP(w, LERP(v, LERP(u, GRAD(p[AA  ], x    , y    , z     ),  /* AND ADD */
+                                 GRAD(p[BA  ], x-1.0, y    , z     )), /* BLENDED */
+                         LERP(u, GRAD(p[AB  ], x    , y-1.0, z     ),  /* RESULTS */
+                                 GRAD(p[BB  ], x-1.0, y-1.0, z     ))),/* FROM  8 */
+                 LERP(v, LERP(u, GRAD(p[AA+1], x    , y    , z-1.0 ),  /* CORNERS */
+                                 GRAD(p[BA+1], x-1.0, y    , z-1.0 )), /* OF CUBE */
+                         LERP(u, GRAD(p[AB+1], x    , y-1.0, z-1.0 ),
+                                 GRAD(p[BB+1], x-1.0, y-1.0, z-1.0 ))));
 }
 
 #undef FADE
@@ -91,13 +91,13 @@ static double noise3(int * p, double x, double y, double z)
 * Based on Perlin Noise Math FAQ by M. Zucker
 */
 static double tiled_noise2(int * p, double x, double y, double w, double h)
-{
+{  
   return
     (
       noise3(p,     x,     y, 0.0) * (w - x) * (h - y) +
-      noise3(p, x - w,     y, 0.0) * (x)     * (h - y) +
-      noise3(p, x - w, y - h, 0.0) * (x)     * (y) +
-      noise3(p,     x, y - h, 0.0) * (w - x) * (y)
+      noise3(p, x - w,     y, 0.0) *     (x) * (h - y) +
+      noise3(p, x - w, y - h, 0.0) *     (x) *     (y) +
+      noise3(p,     x, y - h, 0.0) * (w - x) *     (y)
     ) / (w * h);
 }
 
