@@ -11,3 +11,5 @@ TODO:
 -- Write Makefile
 -- Write some tests
 -- Write readme
+-- Add some benchmarks
+-- Fix LuaJIT interaction
