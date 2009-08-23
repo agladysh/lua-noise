@@ -10,6 +10,13 @@
 * http://mrl.nyu.edu/~perlin/noise/
 */
 
+/*
+* WARNING: This implementation has bugs: the noise seems to be not uniform
+*          for some values. Use with caution.
+*/
+
+/* TODO: Fix it. */
+
 #include <stdlib.h> /* For rand() */
 #define RAND rand
 
