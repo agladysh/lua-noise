@@ -1,0 +1,5 @@
+Excerpt from MIT-licensed Mesa 7.5
+http://cgit.freedesktop.org/mesa/mesa/
+
+File main/imports.h is substitute with slim version
+to suit the needs of the prog_noise.c.

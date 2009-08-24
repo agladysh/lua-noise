@@ -1,5 +1,8 @@
 Acknowledgements
-----------------
+================
+
+Perlin noise
+------------
 
 Perlin Noise Implementation is based on Ken Perlin's own Java reference code:
 
@@ -11,9 +14,14 @@ Tiled Perlin noise is based on Perlin Noise Math FAQ by M. Zucker
     http://web.archive.org/web/20070708001151/\
       http://www.cs.cmu.edu/~mzucker/code/perlin-noise-math-faq.html
 
+Simplex noise
+-------------
+
+Simplex noise implementation is taken from MIT-licensed Mesa 7.5 library.
+http://www.mesa3d.org/
 
 Lua-Noise authors
------------------
+=================
 
 This Lua C module was coded by:
 
