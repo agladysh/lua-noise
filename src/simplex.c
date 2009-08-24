@@ -72,10 +72,10 @@ static int l_noise4(lua_State * L)
 
 static int l_tiled_noise2(lua_State * L)
 {
-  double x = luaL_checknumber(L, 2);
-  double y = luaL_checknumber(L, 3);
-  double w = luaL_checknumber(L, 4);
-  double h = luaL_checknumber(L, 5);
+  double x = luaL_checknumber(L, 1);
+  double y = luaL_checknumber(L, 2);
+  double w = luaL_checknumber(L, 3);
+  double h = luaL_checknumber(L, 4);
 
   lua_pushnumber(L, tiled_noise2(x, y, w, h));
 
