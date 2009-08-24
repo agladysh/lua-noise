@@ -17,6 +17,8 @@
 
 /* TODO: Fix it. */
 
+/* TODO: Add noise4 */
+
 #include <stdlib.h> /* For rand() */
 #define RAND rand
 
